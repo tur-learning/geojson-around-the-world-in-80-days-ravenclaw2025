@@ -18,7 +18,7 @@ geojson_files = ["nolli_points_open.geojson", "osm_node_way_relation.geojson"]
 # HINT: Use the function `extract_files()` to extract the required files.
 # This function returns a list of extracted file paths.
 
-# extracted_files = ...
+extracted_files = extract_files(zip_file ,geojson_files)
 # nolli_file, osm_file = extracted_files  # Unpack the extracted file paths
 
 ###############################
@@ -29,8 +29,8 @@ geojson_files = ["nolli_points_open.geojson", "osm_node_way_relation.geojson"]
 # - `nolli_data`: Contains the historical map data.
 # - `osm_data`: Contains modern OpenStreetMap features.
 
-# nolli_data = ...
-# osm_data = ...
+nolli_data = load_data("nolli_points_open.geojson")
+osm_data = load_data("osm_node_way_relation.geojson")
 
 ###############################
 # 4) Extract relevant info from Nolli data
@@ -59,16 +59,24 @@ geojson_files = ["nolli_points_open.geojson", "osm_node_way_relation.geojson"]
 #   }
 # }
 
-# nolli_relevant_data = {}
-# nolli_features = nolli_data["features"]
+nolli_relevant_data = []
+nolli_features = nolli_data["features"]
+#print(nolli_features[0])
 
-# for feature in nolli_features:
-#     properties = feature.get("properties", {})
-#     # Extract the Nolli Number as the key
-#     # Extract the names
-#     # Extract the geometry
-#     # Store them inside nolli_relevant_data
-
+for feature in nolli_features:
+     properties = feature.get("properties", {})
+     number = properties.get("Nolli Number", {}) 
+     name_nolli = properties.get("Nolli Name", {})
+     name_unraveled = properties.get("Unraveled Name", {})
+     name_modern = properties.get("Modern Name", {})
+     names = [name_nolli, name_unraveled, name_modern]
+     coords = properties.get("geometry", {})
+     nolli_relevant_data.append(number, names, coords)
+     # Extract the Nolli Number as the key
+     # Extract the names
+     # Extract the geometry
+     # Store them inside nolli_relevant_data
+print(nolli_relevant_data[0])
 ###############################
 # 5) Fuzzy match with OSM data
 ###############################

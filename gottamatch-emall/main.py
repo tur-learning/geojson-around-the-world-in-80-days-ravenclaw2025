@@ -59,24 +59,36 @@ osm_data = load_data("osm_node_way_relation.geojson")
 #   }
 # }
 
-nolli_relevant_data = []
-nolli_features = nolli_data["features"]
+nolli_relevant_data = {}
+features = nolli_data.get("features", [])
 #print(nolli_features[0])
 
-for feature in nolli_features:
+for feature in features:
      properties = feature.get("properties", {})
-     number = properties.get("Nolli Number", {}) 
-     name_nolli = properties.get("Nolli Name", {})
-     name_unraveled = properties.get("Unraveled Name", {})
-     name_modern = properties.get("Modern Name", {})
-     names = [name_nolli, name_unraveled, name_modern]
-     coords = properties.get("geometry", {})
-     nolli_relevant_data.append(number, names, coords)
+   
+     nolli_number = properties.get("Nolli Number", "Unkown")
+     
+     nolli_name = properties.get("Nolli Name", "Unkown")
+     unravelled_name = properties.get("Unravelled Name", "Unknown")
+     modern_name = properties.get("Modern Name", "Unknown")
+
+     nolli_names = []
+     nolli_names.append(nolli_name)
+     nolli_names.append(unravelled_name)
+     nolli_names.append(modern_name)
+
+     geometry = feature.get("geometry", {})
+
+     nolli_relevant_data[nolli_number] = {
+          "nolli_names": nolli_names,
+          "nolli_coords": geometry
+     }
+
      # Extract the Nolli Number as the key
      # Extract the names
      # Extract the geometry
      # Store them inside nolli_relevant_data
-print(nolli_relevant_data[0])
+print(nolli_relevant_data)
 ###############################
 # 5) Fuzzy match with OSM data
 ###############################
@@ -94,7 +106,24 @@ print(nolli_relevant_data[0])
 # - Set `threshold=85` (minimum similarity score).
 # - Use `scorer="partial_ratio"` for better matching.
 
-print(f"Searching best match for Nolli names:")
+osm_features = osm_data.get("features", [])
+
+for nolli_id in nolli_relevant_data:
+     names_to_search = nolli_relevant_data[nolli_id]["nolli_names"]
+
+     match_result = find_best_matches(
+          names_to_search,
+          osm_features,
+          key_field="name",
+          threshold=85,
+          scorer="partial_ratio"
+     )
+
+     best_match = match_result[0]
+     match_count = match_result[1]
+
+     nolli_relevant_data[nolli_id]["match"] = best_match
+
 
 # counter = 0  # To track the number of successful matches
 # for nolli_id, values in nolli_relevant_data.items():
@@ -121,6 +150,9 @@ print(f"Searching best match for Nolli names:")
 
 # save_to_json(...)
 # save_to_geojson(...)
+
+save_to_json(nolli_relevant_data, "matched_nolli_features.json")
+save_to_geojson(nolli_relevant_data, "matched_nolli_features.geojson")
 
 print("Matching complete. Results saved.")
 
